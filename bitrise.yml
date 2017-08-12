@@ -1,0 +1,49 @@
+---
+format_version: '3'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: ionic
+trigger_map:
+- pull_request_target_branch: master
+  workflow: primary
+workflows:
+  primary:
+    steps:
+    - activate-ssh-key@3.1.1:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - git-clone@3.5.1: {}
+    - npm@0.9.0:
+        inputs:
+        - command: install
+        title: npm install
+    - npm@0.9.0:
+        inputs:
+        - command: run test:ci
+        title: npm run test:ci
+    - ionic-archive:
+        inputs:
+        - platform: "$IONIC_PLATFORM"
+        - target: emulator
+        - cordova_version: 7.0.1
+        - ionic_version: 3.7.0
+        - options: "--prod"
+    - deploy-to-bitrise-io:
+    - slack@2.6.1:
+        inputs:
+        - channel: "#restaurante_app"
+        - from_username: Mr. Robot
+        - from_username_on_error: Mr. Robot
+        - message: 'Pessoal, o app $BITRISE_APP_TITLE tem uma nova versão do branch
+            $BITRISE_GIT_BRANCH e você pode instalá-la pela url: $BITRISE_PUBLIC_INSTALL_PAGE_URL'
+        - webhook_url: https://hooks.slack.com/services/XXX/XXX/XXX
+        - message_on_error: 'Pessoal :confused:, o app $BITRISE_APP_TITLE teve uma
+            build ($BITRISE_BUILD_SLUG) do branch $BITRISE_GIT_BRANCH que falhou,
+            para mais informações acesse: $BITRISE_BUILD_URL'
+        - emoji: ":robot_face:"
+        - emoji_on_error: ":robot_face:"
+        - icon_url: ''
+        - icon_url_on_error: ''
+app:
+  envs:
+  - opts:
+      is_expand: false
+    IONIC_PLATFORM: ios,android
