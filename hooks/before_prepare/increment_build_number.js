@@ -9,5 +9,11 @@ exec('git rev-list --count HEAD', (err, stdout, stderr) => {
     return;
   }
 
-  cordovaSetVersion(`1.0.${stdout.trim()}`);
+  const baseVersion = '1.0';
+  const minorVersion = stdout.trim();
+  const version = `${baseVersion}.${minorVersion}`;
+
+  const buildNumber = parseInt(baseVersion.split('.').map(d => parseInt(d, 10) * 10).join('') + minorVersion, 10);
+
+  cordovaSetVersion(version, buildNumber);
 })
